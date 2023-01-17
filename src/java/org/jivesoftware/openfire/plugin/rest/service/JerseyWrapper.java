@@ -115,7 +115,8 @@ public class JerseyWrapper extends ResourceConfig {
             UserLockoutService.class,
             UserRosterService.class,
             UserService.class,
-            UserServiceLegacy.class
+            UserServiceLegacy.class,
+            PubSubService.class
         );
 
         // Exception mapper
