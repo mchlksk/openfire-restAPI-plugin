@@ -54,13 +54,16 @@ public class PubSubService {
     @Operation( summary = "Get child nodes",
                 description = "Get a list of all PubSub nodes that are children to the given parent node. If parent is not provided (or empty), the invisible root collection node is used as parent.",
                 responses = {
-                    @ApiResponse(responseCode = "200", description = "PubSub nodes", content = @Content(schema = @Schema(implementation = NodeEntities.class)))
+                    @ApiResponse(responseCode = "200", description = "PubSub nodes", content = @Content(schema = @Schema(implementation = NodeEntities.class))),
+                    @ApiResponse(responseCode = "404", description = "Parent node with this id not found.")
                 })
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public NodeEntities getNodes(
         @Parameter(description = "The ID of the parent collection node, whom children are reqeusted.", example = "pubsub/shakespeare/lit/moorish_meanderings", required = true) @QueryParam("parent") String parent)
         throws ServiceException
     {
-        return new NodeEntities(pubSubController.getNodes((parent == null) ? "" : parent));
+        final String parentSafe = (parent == null) ? "" : parent; 
+        return new NodeEntities(pubSubController.getNodes(parentSafe));
     }
 
     @POST

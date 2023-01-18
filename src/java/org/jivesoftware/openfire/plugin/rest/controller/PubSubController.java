@@ -69,6 +69,17 @@ public class PubSubController {
      *             the service exception
      */
     public List<NodeEntity> getNodes(String targetParentId) throws ServiceException {
+        
+        // check that given parent node does exist, if specified
+        if(!targetParentId.isEmpty())
+        {
+            Node targetParentNode = XMPPServer.getInstance().getPubSubModule().getNode(targetParentId);
+            if(targetParentNode == null)
+            {
+                throw new ServiceException("Could not find given parent node", targetParentId, ExceptionType.ILLEGAL_ARGUMENT_EXCEPTION , Response.Status.NOT_FOUND, null);
+            }
+        }
+    
         Collection<Node> nodes = XMPPServer.getInstance().getPubSubModule().getNodes();
         List<NodeEntity> nodeEntities = new ArrayList<>();
         for(Node node : nodes)
