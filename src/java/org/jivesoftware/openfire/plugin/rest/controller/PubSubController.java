@@ -205,7 +205,9 @@ public class PubSubController {
             return result;
         }
         
-        if(purge && !node.isCollectionNode())
+        final boolean doPurge = purge && !node.isCollectionNode();
+        
+        if(doPurge)
         {
             ((LeafNode) node).purge();
         }
@@ -213,7 +215,7 @@ public class PubSubController {
         
         result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Success);
         String message = new String("The given node has been deleted as requested");
-        if(purge)
+        if(doPurge)
         {
             message = message + " (published items purged)";
         }
