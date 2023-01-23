@@ -198,13 +198,6 @@ public class PubSubController {
             return result;
         }
         
-        if(node.isCollectionNode())
-        {
-            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
-            result.setMessage("Node deletion failed, the node that needs to be deleted is a collection node, deleting such node is not supported");                                               
-            return result;
-        }
-        
         if(!node.isAdmin(new JID(operatorJid)))
         {
             result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
@@ -212,7 +205,7 @@ public class PubSubController {
             return result;
         }
         
-        if(purge)
+        if(purge && !node.isCollectionNode())
         {
             ((LeafNode) node).purge();
         }
