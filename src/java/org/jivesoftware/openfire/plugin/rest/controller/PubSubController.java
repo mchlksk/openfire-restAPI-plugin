@@ -27,6 +27,9 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 import org.xmpp.packet.PacketError.Condition;
 
+import org.xmpp.forms.DataForm;
+import org.xmpp.forms.FormField;
+
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.pubsub.PubSubInfo;
 import org.jivesoftware.openfire.pubsub.PubSubService;
@@ -132,7 +135,7 @@ public class PubSubController {
             typeValue.setText("leaf");
         else
             typeValue.setText("collection");
-        
+            
         PubSubEngine.CreateNodeResponse engineResponse = PubSubEngine.createNodeHelper(pubSubModule, new JID(creatorJid), configureElement, nodeEntity.getId(), null);
         
         if(engineResponse.creationStatus != null
@@ -155,6 +158,27 @@ public class PubSubController {
             result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
             result.setMessage("Node creation failed, PubSubengine returned null Node, without further details about the error");                                               
             return result;
+        }
+        else if(!nodeEntity.getName().isEmpty())
+        {
+            // set node name
+            // cannot be done directly whlie creating node,
+            // as createNodeHelper only does propagate selected fields from provided configuration
+            try
+            {
+                DataForm configName = new DataForm(DataForm.Type.submit);
+                FormField nameField = configName.addField();
+                nameField.setType(FormField.Type.list_single);
+                nameField.setVariable("pubsub#title");
+                nameField.addValue(nodeEntity.getName());
+                engineResponse.newNode.configure(configName);
+            }
+            catch (Exception e)
+            {
+                result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+                result.setMessage("Node created, but setting it's name (title) field failed");                                               
+                return result;
+            }
         }
         
         result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Success);
