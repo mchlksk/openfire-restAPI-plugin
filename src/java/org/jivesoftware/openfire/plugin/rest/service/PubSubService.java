@@ -28,6 +28,7 @@ import org.jivesoftware.openfire.plugin.rest.controller.PubSubController;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeEntity;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeEntities;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeOperationResultEntity;
+import org.jivesoftware.openfire.plugin.rest.entity.PublishItemEntity;
 
 import java.util.*;
 
@@ -97,5 +98,21 @@ public class PubSubService {
         throws ServiceException
     {                                          
         return pubSubController.deleteNode(id, jid, purge);
+    }
+
+    @POST
+    @Path("/{id}")
+    @Operation( summary = "Publish item to PubSub",
+        description = "Publish an item to a PubSub.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Request has been processed. Results are reported in the response.", content = @Content(schema = @Schema(implementation = NodeOperationResultEntity.class)))
+        })
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public NodeOperationResultEntity publish(
+        @Parameter(description = "The ID of the node where the item needs to be published.", example = "pubsub/shakespeare/lit/moorish_meanderings", required = true) @PathParam("id") String id,
+        @RequestBody(description = "Publish item.", required = true) PublishItemEntity publishItem)
+        throws ServiceException
+    {                                          
+        return pubSubController.publishItem(id, publishItem);
     }
 }

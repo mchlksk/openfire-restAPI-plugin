@@ -18,8 +18,12 @@ package org.jivesoftware.openfire.plugin.rest.controller;
 
 import java.util.*;
 import javax.ws.rs.core.Response;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 import org.dom4j.Element;
+import org.dom4j.DocumentHelper;
 import org.dom4j.util.UserDataElement;
 import org.dom4j.QName;
 
@@ -42,6 +46,7 @@ import org.jivesoftware.openfire.pubsub.DefaultNodeConfiguration;
 
 import org.jivesoftware.openfire.plugin.rest.entity.NodeEntity;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeOperationResultEntity;
+import org.jivesoftware.openfire.plugin.rest.entity.PublishItemEntity;
 
 import org.jivesoftware.openfire.plugin.rest.exceptions.ExceptionType;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ServiceException;
@@ -102,6 +107,18 @@ public class PubSubController {
     }
     
     /**
+     * Convenience method to add config field to Node config form
+     * 
+     */ 
+    private static void addNodeConfigField(DataForm target, String name, String value)
+    {
+        FormField field = target.addField();
+        field.setType(FormField.Type.list_single);
+        field.setVariable(name);
+        field.addValue(value);
+    }
+    
+    /**
      * Create a new node.
      *
      * @return NodeOperationResultEntity
@@ -135,7 +152,7 @@ public class PubSubController {
             typeValue.setText("leaf");
         else
             typeValue.setText("collection");
-            
+
         PubSubEngine.CreateNodeResponse engineResponse = PubSubEngine.createNodeHelper(pubSubModule, new JID(creatorJid), configureElement, nodeEntity.getId(), null);
         
         if(engineResponse.creationStatus != null
@@ -161,17 +178,22 @@ public class PubSubController {
         }
         else if(!nodeEntity.getName().isEmpty())
         {
-            // set node name
+            // set additional node configuration
             // cannot be done directly whlie creating node,
             // as createNodeHelper only does propagate selected fields from provided configuration
             try
             {
-                DataForm configName = new DataForm(DataForm.Type.submit);
-                FormField nameField = configName.addField();
-                nameField.setType(FormField.Type.list_single);
-                nameField.setVariable("pubsub#title");
-                nameField.addValue(nodeEntity.getName());
-                engineResponse.newNode.configure(configName);
+                // https://xmpp.org/extensions/xep-0060.html#owner-create-and-configure
+                DataForm config = new DataForm(DataForm.Type.submit);
+                addNodeConfigField(config, "pubsub#title", nodeEntity.getName());
+                addNodeConfigField(config, "pubsub#persist_items", "1");
+                addNodeConfigField(config, "pubsub#max_items", "max");
+                addNodeConfigField(config, "pubsub#max_payload_size", "10240");
+                addNodeConfigField(config, "pubsub#access_model", "open");
+                addNodeConfigField(config, "pubsub#publish_model", "open");
+                addNodeConfigField(config, "pubsub#send_last_published_item", "never");
+
+                engineResponse.newNode.configure(config);
             }
             catch (Exception e)
             {
@@ -202,7 +224,7 @@ public class PubSubController {
         if(nodeId.isEmpty())
         {
             result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
-            result.setMessage("Node deletion failed, thye provided node ID is epmty");                                               
+            result.setMessage("Node deletion failed, the provided node ID is empty");                                               
             return result;
         }
         
@@ -246,4 +268,150 @@ public class PubSubController {
         result.setMessage(message);                                               
         return result;
     }
+
+    /**
+     * Publish item to node.
+     *
+     * @return NodeOperationResultEntity
+     *             the publish result
+     * @throws ServiceException
+     *             the service exception
+     */
+    public NodeOperationResultEntity publishItem(String nodeId, PublishItemEntity item) throws ServiceException {
+
+        NodeOperationResultEntity result = new NodeOperationResultEntity();
+        result.setNodeId(nodeId);
+        
+        if(nodeId.isEmpty())
+        {
+            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+            result.setMessage("Publish failed, the provided node ID is empty");                                               
+            return result;
+        }
+        
+        Node node = XMPPServer.getInstance().getPubSubModule().getNode(nodeId);
+        
+        if(node == null)
+        {
+            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+            result.setMessage("Publish failed, the node with the given ID was not found on this server");                                               
+            return result;
+        }
+        
+        if(node.isRootCollectionNode() || node.isCollectionNode())
+        {
+            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+            result.setMessage("Publish failed, the node with the given ID is a collection node");                                               
+            return result;
+        }
+        
+
+        /////////////////////
+        
+        /*
+        Element item = formElement.addElement("field");
+            collectionElement.addAttribute("var", "pubsub#collection");
+            Element collectionValue = collectionElement.addElement("value");
+            collectionValue.setText(nodeEntity.getParent());
+        Element configureElement = new UserDataElement("configure");
+        Element formElement = configureElement.addElement(QName.get("x", "jabber:x:data"));
+        /////////////////////
+        List<Element> items = new ArrayList<>();
+        items.add(item);
+        
+        ((LeafNode) node).publishItems(new JID(publisherJid), items);
+
+        */
+
+        /////////////////////
+
+        /*
+        if (!(node instanceof LeafNode))
+        {
+            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+            result.setMessage("Publish failed, the node with the given ID is not a leaf node");                                               
+            return result;
+        }
+        */
+
+        //data.detach();
+        final Element payload = DocumentHelper.createElement("item");
+        Element entry = payload.addElement("entry");
+        entry.addAttribute("xmlns", "http://www.w3.org/2005/Atom"); // TBD
+        
+        Element subject = entry.addElement("subject");
+        subject.setText(item.getSubject());
+        
+        Element summary = entry.addElement("summary");
+        summary.setText(item.getSummary());
+
+        Element body = entry.addElement("body");
+        body.setText(item.getBody());
+
+        Element id = entry.addElement("id");
+        id.setText(UUID.randomUUID().toString());
+
+        String timestamp = ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT );
+        Element date = entry.addElement("published");
+        date.setText(timestamp);
+
+        Element author = entry.addElement("author");
+        author.setText(item.getAuthor());
+
+
+        //Element titleElement = new UserDataElement("title");
+        //titleElement.
+
+        /*
+        if(!nodeEntity.getParent().isEmpty())
+        {
+            Element collectionElement = formElement.addElement("field");
+            collectionElement.addAttribute("var", "pubsub#collection");
+            Element collectionValue = collectionElement.addElement("value");
+            collectionValue.setText(nodeEntity.getParent());
+        }
+        
+        Element typeElement = formElement.addElement("field");
+        typeElement.addAttribute("var", "pubsub#node_type");
+        Element typeValue = typeElement.addElement("value");
+        if(nodeEntity.getLeaf())
+            typeValue.setText("leaf");
+        else
+            typeValue.setText("collection");
+
+
+        item.add( data );
+        */
+
+        ((LeafNode) node).publishItems(new JID(item.getAuthor()), Collections.singletonList( payload ));
+        
+        /*
+        if(node.isRootCollectionNode())
+        {
+            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+            result.setMessage("Node deletion failed, the node that needs to be deleted is a root collection node");                                               
+            return result;
+        }
+        
+        if(!node.isAdmin(new JID(operatorJid)))
+        {
+            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
+            result.setMessage("Node deletion failed, the given operator does not have an admin role on the given node");                                               
+            return result;
+        }
+        
+        final boolean doPurge = purge && !node.isCollectionNode();
+        
+        if(doPurge)
+        {
+            ((LeafNode) node).purge();
+        }
+        node.delete();
+        */
+        
+        result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Success);
+        result.setMessage("Item published");                                               
+        return result;
+    }
+
 }
