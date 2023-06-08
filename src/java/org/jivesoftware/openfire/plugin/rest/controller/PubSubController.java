@@ -187,7 +187,7 @@ public class PubSubController {
                 DataForm config = new DataForm(DataForm.Type.submit);
                 addNodeConfigField(config, "pubsub#title", nodeEntity.getName());
                 addNodeConfigField(config, "pubsub#persist_items", "1");
-                addNodeConfigField(config, "pubsub#max_items", "max");
+                addNodeConfigField(config, "pubsub#max_items", "1000"); // use "max" to rely on server-imposed limit
                 addNodeConfigField(config, "pubsub#max_payload_size", "10240");
                 addNodeConfigField(config, "pubsub#access_model", "open");
                 addNodeConfigField(config, "pubsub#publish_model", "open");
@@ -198,7 +198,7 @@ public class PubSubController {
             catch (Exception e)
             {
                 result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
-                result.setMessage("Node created, but setting it's name (title) field failed");                                               
+                result.setMessage("Node created, but node configuration failed");                                               
                 return result;
             }
         }
@@ -304,110 +304,26 @@ public class PubSubController {
             result.setMessage("Publish failed, the node with the given ID is a collection node");                                               
             return result;
         }
-        
 
-        /////////////////////
-        
-        /*
-        Element item = formElement.addElement("field");
-            collectionElement.addAttribute("var", "pubsub#collection");
-            Element collectionValue = collectionElement.addElement("value");
-            collectionValue.setText(nodeEntity.getParent());
-        Element configureElement = new UserDataElement("configure");
-        Element formElement = configureElement.addElement(QName.get("x", "jabber:x:data"));
-        /////////////////////
-        List<Element> items = new ArrayList<>();
-        items.add(item);
-        
-        ((LeafNode) node).publishItems(new JID(publisherJid), items);
-
-        */
-
-        /////////////////////
-
-        /*
-        if (!(node instanceof LeafNode))
-        {
-            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
-            result.setMessage("Publish failed, the node with the given ID is not a leaf node");                                               
-            return result;
-        }
-        */
-
-        //data.detach();
         final Element payload = DocumentHelper.createElement("item");
         Element entry = payload.addElement("entry");
         entry.addAttribute("xmlns", "http://www.w3.org/2005/Atom"); // TBD
         
         Element subject = entry.addElement("subject");
         subject.setText(item.getSubject());
-        
         Element summary = entry.addElement("summary");
         summary.setText(item.getSummary());
-
         Element body = entry.addElement("body");
         body.setText(item.getBody());
-
         Element id = entry.addElement("id");
         id.setText(UUID.randomUUID().toString());
-
         String timestamp = ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT );
         Element date = entry.addElement("published");
         date.setText(timestamp);
-
         Element author = entry.addElement("author");
         author.setText(item.getAuthor());
 
-
-        //Element titleElement = new UserDataElement("title");
-        //titleElement.
-
-        /*
-        if(!nodeEntity.getParent().isEmpty())
-        {
-            Element collectionElement = formElement.addElement("field");
-            collectionElement.addAttribute("var", "pubsub#collection");
-            Element collectionValue = collectionElement.addElement("value");
-            collectionValue.setText(nodeEntity.getParent());
-        }
-        
-        Element typeElement = formElement.addElement("field");
-        typeElement.addAttribute("var", "pubsub#node_type");
-        Element typeValue = typeElement.addElement("value");
-        if(nodeEntity.getLeaf())
-            typeValue.setText("leaf");
-        else
-            typeValue.setText("collection");
-
-
-        item.add( data );
-        */
-
         ((LeafNode) node).publishItems(new JID(item.getAuthor()), Collections.singletonList( payload ));
-        
-        /*
-        if(node.isRootCollectionNode())
-        {
-            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
-            result.setMessage("Node deletion failed, the node that needs to be deleted is a root collection node");                                               
-            return result;
-        }
-        
-        if(!node.isAdmin(new JID(operatorJid)))
-        {
-            result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Failure);
-            result.setMessage("Node deletion failed, the given operator does not have an admin role on the given node");                                               
-            return result;
-        }
-        
-        final boolean doPurge = purge && !node.isCollectionNode();
-        
-        if(doPurge)
-        {
-            ((LeafNode) node).purge();
-        }
-        node.delete();
-        */
         
         result.setResultType(NodeOperationResultEntity.NodeOperationResultType.Success);
         result.setMessage("Item published");                                               
