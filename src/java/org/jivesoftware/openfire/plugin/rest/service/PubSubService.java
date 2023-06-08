@@ -28,6 +28,7 @@ import org.jivesoftware.openfire.plugin.rest.controller.PubSubController;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeEntity;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeEntities;
 import org.jivesoftware.openfire.plugin.rest.entity.NodeOperationResultEntity;
+import org.jivesoftware.openfire.plugin.rest.entity.NodeOperationResultEntities;
 import org.jivesoftware.openfire.plugin.rest.entity.PublishItemEntity;
 
 import java.util.*;
@@ -68,19 +69,24 @@ public class PubSubService {
     }
 
     @POST
-    @Operation( summary = "Create node",
-        description = "Create a new PubSub node.",
+    @Operation( summary = "Create node(s)",
+        description = "Create new PubSub node(s).",
         responses = {
-            @ApiResponse(responseCode = "200", description = "Request has been processed. Results are reported in the response.", content = @Content(schema = @Schema(implementation = NodeOperationResultEntity.class)))
+            @ApiResponse(responseCode = "200", description = "Request has been processed. Results are reported in the response.", content = @Content(schema = @Schema(implementation = NodeOperationResultEntities.class)))
         })
     @Consumes({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public NodeOperationResultEntity addNode(
+    public NodeOperationResultEntities addNodes(
         @Parameter(description = "The JID of the creator.", example = "hamlet@denmark.lit", required = true) @QueryParam("jid") String jid,
-        @RequestBody(description = "The node that needs to be created.", required = true) NodeEntity nodeEntity)
+        @RequestBody(description = "The list of nodes that needs to be created.", required = true) NodeEntities nodeEntities)
         throws ServiceException
     {
-        return pubSubController.addNode(nodeEntity, jid);
+        List<NodeOperationResultEntity> results = new ArrayList<NodeOperationResultEntity>();
+        for(NodeEntity node : nodeEntities.getNodes())
+        {
+            results.add(pubSubController.addNode(node, jid));
+        }
+        return new NodeOperationResultEntities(results);
     }
     
     @DELETE

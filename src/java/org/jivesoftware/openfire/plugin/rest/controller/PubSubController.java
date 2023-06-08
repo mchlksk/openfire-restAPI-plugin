@@ -307,7 +307,8 @@ public class PubSubController {
 
         final Element payload = DocumentHelper.createElement("item");
         Element entry = payload.addElement("entry");
-        entry.addAttribute("xmlns", "http://www.w3.org/2005/Atom"); // TBD
+        entry.addAttribute("xmlns", "http://jabber.org/protocol/pubsub");
+        entry.addAttribute("xlmns", "http://www.w3.org/2005/Atom");
         
         Element subject = entry.addElement("subject");
         subject.setText(item.getSubject());
