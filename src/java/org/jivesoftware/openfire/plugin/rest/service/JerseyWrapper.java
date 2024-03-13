@@ -116,7 +116,8 @@ public class JerseyWrapper extends ResourceConfig {
             UserRosterService.class,
             UserService.class,
             UserServiceLegacy.class,
-            PubSubService.class
+            PubSubService.class,
+            PacketService.class
         );
 
         // Exception mapper
