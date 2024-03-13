@@ -23,6 +23,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 import org.dom4j.Element;
+import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.util.UserDataElement;
 import org.dom4j.QName;
@@ -67,4 +68,28 @@ public class PacketController {
     public String test01() {
         return "oukey doukey";
     }
+
+    public String routeIq(String packetContent) {
+        Document doc;
+        try {
+            doc = DocumentHelper.parseText(packetContent);
+        } catch (Exception e) {
+            return "parser exception: "+e.toString();
+        }
+    
+        IQ iq = new IQ(doc.getRootElement());
+
+        XMPPServer server = XMPPServer.getInstance();
+        if(server == null)
+            return "server is null";
+        
+        try {
+            server.getPacketRouter().route(iq);
+        } catch (Exception e) {
+            return "route exception: "+e.toString();
+        }
+
+        return "oukey doukey";
+    }
+
 }

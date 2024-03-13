@@ -70,96 +70,24 @@ public class PacketService {
     }
 
 
-    /*
-    @GET
-    @Operation( summary = "Get child nodes",
-                description = "Get a list of all PubSub nodes that are children to the given parent node. If parent is not provided (or empty), the invisible root collection node is used as parent.",
-                responses = {
-                    @ApiResponse(responseCode = "200", description = "PubSub nodes", content = @Content(schema = @Schema(implementation = NodeEntities.class))),
-                    @ApiResponse(responseCode = "404", description = "Parent node with this id not found.")
-                })
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public NodeEntities getNodes(
-        @Parameter(description = "The ID of the parent collection node, whom children are reqeusted.", example = "pubsub/shakespeare/lit/moorish_meanderings", required = true) @QueryParam("parent") String parent)
-        throws ServiceException
-    {
-        final String parentSafe = (parent == null) ? "" : parent; 
-        return new NodeEntities(pubSubController.getNodes(parentSafe));
-    }
-
     @POST
-    @Operation( summary = "Create node(s)",
-        description = "Create new PubSub node(s).",
+    @Path("/iq")
+    @Operation( summary = "Route an IQ packet",
+        description = "Rout an IQ packet.",
         responses = {
-            @ApiResponse(responseCode = "200", description = "Request has been processed. Results are reported in the response.", content = @Content(schema = @Schema(implementation = NodeOperationResultEntities.class)))
+            //@ApiResponse(responseCode = "200", description = "The packet has been added to processing queue")
+            @ApiResponse(responseCode = "200", description = "The packet has been added to processing queue.", content = @Content(schema = @Schema(implementation = MessageEntity.class)))
         })
-    @Consumes({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public NodeOperationResultEntities addNodes(
-        @Parameter(description = "The JID of the creator.", example = "hamlet@denmark.lit", required = true) @QueryParam("jid") String jid,
-        @RequestBody(description = "The list of nodes that needs to be created.", required = true) NodeEntities nodeEntities)
+    public MessageEntity routeIq(
+        @RequestBody(description = "An IQ packet.", required = true) String packet)
         throws ServiceException
     {
-        List<NodeOperationResultEntity> results = new ArrayList<NodeOperationResultEntity>();
-        for(NodeEntity node : nodeEntities.getNodes())
-        {
-            results.add(pubSubController.addNode(node, jid));
-        }
-        return new NodeOperationResultEntities(results);
-    }
-    
-    @DELETE
-    @Path("/{id}")
-    @Operation( summary = "Delete PubSub node",
-        description = "Removes an existing PubSub node.",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Request has been processed. Results are reported in the response.", content = @Content(schema = @Schema(implementation = NodeOperationResultEntity.class)))
-        })
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public NodeOperationResultEntity deleteNode(
-        @Parameter(description = "The JID of the operator who commands node deletion.", example = "hamlet@denmark.lit", required = true) @QueryParam("jid") String jid,
-        @Parameter(description = "Whether the published items need to be purged before node deletion.", example = "true", required = false) @QueryParam("purge") boolean purge,
-        @Parameter(description = "The ID of the node that needs to be deleted.", example = "pubsub/shakespeare/lit/moorish_meanderings", required = true) @PathParam("id") String id)
-        throws ServiceException
-    {                                          
-        return pubSubController.deleteNode(id, jid, purge);
-    }
-
-    @POST
-    @Path("/{id}")
-    @Operation( summary = "Publish item to PubSub",
-        description = "Publish an item to a PubSub.",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Request has been processed. Results are reported in the response.", content = @Content(schema = @Schema(implementation = NodeOperationResultEntity.class)))
-        })
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public NodeOperationResultEntity publish(
-        @Parameter(description = "The ID of the node where the item needs to be published.", example = "pubsub/shakespeare/lit/moorish_meanderings", required = true) @PathParam("id") String id,
-        @RequestBody(description = "Publish item.", required = true) PublishItemEntity publishItem)
-        throws ServiceException
-    {                                          
-        return pubSubController.publishItem(id, publishItem);
-    }
-
-    @GET
-    @Path("/test01")
-    @Operation( summary = "Test endpoint 01",
-                description = "Test endpoint 01",
-                responses = {
-                    //@ApiResponse(responseCode = "200", description = "test01 request has been processed")
-                    @ApiResponse(responseCode = "200", description = "test01 request has been processed.", content = @Content(schema = @Schema(implementation = MessageEntity.class)))
-                })
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    //public Response test01()
-    public MessageEntity test01()
-        throws ServiceException
-    {
-        String testResult = pubSubController.test01();
-        //return Response.status(Status.OK).build();
+        String result = packetController.routeIq(packet);
         MessageEntity msg = new MessageEntity();
-        msg.setBody(testResult);
+        msg.setBody(result);
         return msg;
-    }
-    */
 
+        //return Response.status(Status.OK).build();
+    }
 }
