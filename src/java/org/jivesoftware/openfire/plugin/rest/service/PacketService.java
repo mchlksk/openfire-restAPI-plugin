@@ -63,31 +63,28 @@ public class PacketService {
         throws ServiceException
     {
         String testResult = packetController.test01();
-        //return Response.status(Status.OK).build();
         MessageEntity msg = new MessageEntity();
         msg.setBody(testResult);
         return msg;
+        //return Response.status(Status.OK).build();
     }
 
 
     @POST
     @Path("/iq")
     @Operation( summary = "Route an IQ packet",
-        description = "Rout an IQ packet.",
+        description = "Route an IQ packet.",
         responses = {
-            //@ApiResponse(responseCode = "200", description = "The packet has been added to processing queue")
-            @ApiResponse(responseCode = "200", description = "The packet has been added to processing queue.", content = @Content(schema = @Schema(implementation = MessageEntity.class)))
+            @ApiResponse(responseCode = "200", description = "The IQ packet has been added to processing queue."),
+            @ApiResponse(responseCode = "400", description = "Invalid IQ packet."),
+            @ApiResponse(responseCode = "500", description = "The IQ packet failed to process due to internal server error.")
         })
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public MessageEntity routeIq(
-        @RequestBody(description = "An IQ packet.", required = true) String packet)
+    public Response routeIq(
+        @RequestBody(description = "An IQ packet.", required = true) String packetContent)
         throws ServiceException
     {
-        String result = packetController.routeIq(packet);
-        MessageEntity msg = new MessageEntity();
-        msg.setBody(result);
-        return msg;
-
-        //return Response.status(Status.OK).build();
+        packetController.routeIq(packetContent);
+        return Response.status(Status.OK).build();
     }
 }

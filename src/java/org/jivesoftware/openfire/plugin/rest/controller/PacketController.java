@@ -40,7 +40,6 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ExceptionType;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ServiceException;
 
-//import org.xmpp.packet.JID;
 import org.xmpp.packet.*; // IQ
 
 
@@ -69,27 +68,43 @@ public class PacketController {
         return "oukey doukey";
     }
 
-    public String routeIq(String packetContent) {
+    /**
+     * routeIq.
+     *
+     * @param packetContent
+     *            the IQ packet content in XML format
+     * @return NodeOperationResultEntity
+     *             the node creation result
+     * @throws ServiceException
+     *             the service exception
+     */
+    public void routeIq(String packetContent) throws ServiceException {
         Document doc;
         try {
             doc = DocumentHelper.parseText(packetContent);
         } catch (Exception e) {
-            return "parser exception: "+e.toString();
+            throw new ServiceException("Could not deserialize given data as XML.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
         }
     
-        IQ iq = new IQ(doc.getRootElement());
+        IQ iq;
+        try {
+            iq = new IQ(doc.getRootElement());
+        } catch (Exception e) {
+            throw new ServiceException("Could not construct IQ object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+        
+        if(iq.getType() == IQ.Type.error)
+            throw new ServiceException("Could not construct IQ object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
 
         XMPPServer server = XMPPServer.getInstance();
         if(server == null)
-            return "server is null";
+            throw new ServiceException("Could not get instance of XMPP server.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
         
         try {
             server.getPacketRouter().route(iq);
         } catch (Exception e) {
-            return "route exception: "+e.toString();
+            throw new ServiceException("XMPP server packet router failed to route the IQ packet.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
         }
-
-        return "oukey doukey";
     }
 
 }
