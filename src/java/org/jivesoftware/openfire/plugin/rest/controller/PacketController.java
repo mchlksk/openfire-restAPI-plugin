@@ -93,9 +93,6 @@ public class PacketController {
             throw new ServiceException("Could not construct IQ object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
         }
         
-        if(iq.getType() == IQ.Type.error)
-            throw new ServiceException("Could not construct IQ object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
-
         XMPPServer server = XMPPServer.getInstance();
         if(server == null)
             throw new ServiceException("Could not get instance of XMPP server.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
