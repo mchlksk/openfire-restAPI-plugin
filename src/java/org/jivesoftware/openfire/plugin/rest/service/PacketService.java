@@ -81,10 +81,11 @@ public class PacketService {
         })
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response routeIq(
+        @Parameter(description = "Override packet ID with automatically-generated one.", required = false) @QueryParam("autoid") Boolean autoid,
         @RequestBody(description = "An IQ packet.", required = true) String packetContent)
         throws ServiceException
     {
-        packetController.routeIq(packetContent);
+        packetController.routeIq(packetContent, autoid);
         return Response.status(Status.OK).build();
     }
 

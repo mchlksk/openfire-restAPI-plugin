@@ -78,7 +78,7 @@ public class PacketController {
      * @throws ServiceException
      *             the service exception
      */
-    public void routeIq(String packetContent) throws ServiceException {
+    public void routeIq(String packetContent, Boolean autoid) throws ServiceException {
         Document doc;
         try {
             doc = DocumentHelper.parseText(packetContent);
@@ -91,6 +91,11 @@ public class PacketController {
             iq = new IQ(doc.getRootElement());
         } catch (Exception e) {
             throw new ServiceException("Could not construct IQ object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+        
+        if(autoid != null && autoid)
+        {
+            iq.setID(new IQ().getID());
         }
         
         XMPPServer server = XMPPServer.getInstance();
