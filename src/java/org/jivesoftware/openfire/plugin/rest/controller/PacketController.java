@@ -120,7 +120,7 @@ public class PacketController {
      * @throws ServiceException
      *             the service exception
      */
-    public void routeMessage(String packetContent) throws ServiceException {
+    public void routeMessage(String packetContent, Boolean autoid) throws ServiceException {
         Document doc;
         try {
             doc = DocumentHelper.parseText(packetContent);
@@ -133,6 +133,12 @@ public class PacketController {
             message = new Message(doc.getRootElement());
         } catch (Exception e) {
             throw new ServiceException("Could not construct Message object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+
+        if(autoid != null && autoid)
+        {
+            // take advantage of ID generating ctor of IQ
+            message.setID(new IQ().getID());
         }
         
         XMPPServer server = XMPPServer.getInstance();
@@ -158,7 +164,7 @@ public class PacketController {
      * @throws ServiceException
      *             the service exception
      */
-    public void routePresence(String packetContent) throws ServiceException {
+    public void routePresence(String packetContent, Boolean autoid) throws ServiceException {
         Document doc;
         try {
             doc = DocumentHelper.parseText(packetContent);
@@ -171,6 +177,12 @@ public class PacketController {
             presence = new Presence(doc.getRootElement());
         } catch (Exception e) {
             throw new ServiceException("Could not construct Presence object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+
+        if(autoid != null && autoid)
+        {
+            // take advantage of ID generating ctor of IQ
+            presence.setID(new IQ().getID());
         }
         
         XMPPServer server = XMPPServer.getInstance();

@@ -100,10 +100,11 @@ public class PacketService {
         })
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response routeMessage(
+        @Parameter(description = "Override packet ID with automatically-generated one.", required = false) @QueryParam("autoid") Boolean autoid,
         @RequestBody(description = "A message packet.", required = true) String packetContent)
         throws ServiceException
     {
-        packetController.routeMessage(packetContent);
+        packetController.routeMessage(packetContent, autoid);
         return Response.status(Status.OK).build();
     }
 
@@ -118,10 +119,11 @@ public class PacketService {
         })
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public Response routePresence(
+        @Parameter(description = "Override packet ID with automatically-generated one.", required = false) @QueryParam("autoid") Boolean autoid,
         @RequestBody(description = "A presence packet.", required = true) String packetContent)
         throws ServiceException
     {
-        packetController.routePresence(packetContent);
+        packetController.routePresence(packetContent, autoid);
         return Response.status(Status.OK).build();
     }
 }
