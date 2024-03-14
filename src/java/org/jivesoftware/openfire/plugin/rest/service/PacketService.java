@@ -87,4 +87,40 @@ public class PacketService {
         packetController.routeIq(packetContent);
         return Response.status(Status.OK).build();
     }
+
+    @POST
+    @Path("/message")
+    @Operation( summary = "Route a message packet",
+        description = "Route a message packet.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "The message packet has been added to processing queue."),
+            @ApiResponse(responseCode = "400", description = "Invalid message packet."),
+            @ApiResponse(responseCode = "500", description = "The message packet failed to process due to internal server error.")
+        })
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public Response routeMessage(
+        @RequestBody(description = "A message packet.", required = true) String packetContent)
+        throws ServiceException
+    {
+        packetController.routeMessage(packetContent);
+        return Response.status(Status.OK).build();
+    }
+
+    @POST
+    @Path("/presence")
+    @Operation( summary = "Route a presence packet",
+        description = "Route a presence packet.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "The presence packet has been added to processing queue."),
+            @ApiResponse(responseCode = "400", description = "Invalid presence packet."),
+            @ApiResponse(responseCode = "500", description = "The presence packet failed to process due to internal server error.")
+        })
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public Response routePresence(
+        @RequestBody(description = "A presence packet.", required = true) String packetContent)
+        throws ServiceException
+    {
+        packetController.routePresence(packetContent);
+        return Response.status(Status.OK).build();
+    }
 }

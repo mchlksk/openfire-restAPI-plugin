@@ -40,7 +40,7 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ExceptionType;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ServiceException;
 
-import org.xmpp.packet.*; // IQ
+import org.xmpp.packet.*; // IQ, Message, Presence
 
 
 /**
@@ -73,8 +73,8 @@ public class PacketController {
      *
      * @param packetContent
      *            the IQ packet content in XML format
-     * @return NodeOperationResultEntity
-     *             the node creation result
+     * @return none
+     * 
      * @throws ServiceException
      *             the service exception
      */
@@ -101,6 +101,81 @@ public class PacketController {
             server.getPacketRouter().route(iq);
         } catch (Exception e) {
             throw new ServiceException("XMPP server packet router failed to route the IQ packet.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+
+    /**
+     * routeMessage.
+     *
+     * @param packetContent
+     *            the message packet content in XML format
+     * @return none
+     * 
+     * @throws ServiceException
+     *             the service exception
+     */
+    public void routeMessage(String packetContent) throws ServiceException {
+        Document doc;
+        try {
+            doc = DocumentHelper.parseText(packetContent);
+        } catch (Exception e) {
+            throw new ServiceException("Could not deserialize given data as XML.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+    
+        Message message;
+        try {
+            message = new Message(doc.getRootElement());
+        } catch (Exception e) {
+            throw new ServiceException("Could not construct Message object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+        
+        XMPPServer server = XMPPServer.getInstance();
+        if(server == null)
+            throw new ServiceException("Could not get instance of XMPP server.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
+        
+        try {
+            server.getPacketRouter().route(message);
+        } catch (Exception e) {
+            throw new ServiceException("XMPP server packet router failed to route the message packet.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+
+
+    /**
+     * routePresence.
+     *
+     * @param packetContent
+     *            the presence packet content in XML format
+     * @return none
+     * 
+     * @throws ServiceException
+     *             the service exception
+     */
+    public void routePresence(String packetContent) throws ServiceException {
+        Document doc;
+        try {
+            doc = DocumentHelper.parseText(packetContent);
+        } catch (Exception e) {
+            throw new ServiceException("Could not deserialize given data as XML.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+    
+        Presence presence;
+        try {
+            presence = new Presence(doc.getRootElement());
+        } catch (Exception e) {
+            throw new ServiceException("Could not construct Presence object from the given data.", "PacketController", "BAD_REQUEST" , Response.Status.BAD_REQUEST, null);
+        }
+        
+        XMPPServer server = XMPPServer.getInstance();
+        if(server == null)
+            throw new ServiceException("Could not get instance of XMPP server.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
+        
+        try {
+            server.getPacketRouter().route(presence);
+        } catch (Exception e) {
+            throw new ServiceException("XMPP server packet router failed to route the presence packet.", "PacketController", "INTERNAL_SERVER_ERROR" , Response.Status.INTERNAL_SERVER_ERROR, null);
         }
     }
 
